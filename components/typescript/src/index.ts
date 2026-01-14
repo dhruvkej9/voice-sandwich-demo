@@ -1,4 +1,4 @@
-import "dotenv/config";
+import { config } from "dotenv";
 import { fileURLToPath } from "node:url";
 import { existsSync } from "node:fs";
 import { createAgent, AIMessage, ToolMessage } from "langchain";
@@ -17,11 +17,15 @@ import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 import { CARTESIA_TTS_SYSTEM_PROMPT, CartesiaTTS } from "./cartesia";
-import { AssemblyAISTT } from "./assemblyai/index";
+import { AssemblyAISTT } from "./assemblyai";
 import type { VoiceAgentEvent } from "./types";
+import { ChatGroq } from "@langchain/groq";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Load .env from project root
+config({ path: path.join(__dirname, "../../../.env") });
 const STATIC_DIR = path.join(__dirname, "../../web/dist");
 const PORT = parseInt(process.env.PORT ?? "8000");
 
@@ -76,8 +80,16 @@ Available cheeses: swiss, cheddar, provolone.
 ${CARTESIA_TTS_SYSTEM_PROMPT}
 `;
 
+const model = new ChatGroq({
+  apiKey: process.env.GROQ_API_KEY,
+  model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
+  temperature: parseFloat(process.env.GROQ_TEMPERATURE || "0.7"),
+  maxTokens: parseInt(process.env.GROQ_MAX_TOKENS || "1024"),
+  streaming: true,
+});
+
 const agent = createAgent({
-  model: "claude-haiku-4-5",
+  model: model,
   tools: [addToOrder, confirmOrder],
   checkpointer: new MemorySaver(),
   systemPrompt: systemPrompt,

@@ -14,10 +14,8 @@ import json
 import os
 from typing import AsyncIterator, Optional
 from urllib.parse import urlencode
-
 import websockets
 from websockets.client import WebSocketClientProtocol
-
 from events import STTChunkEvent, STTEvent, STTOutputEvent
 
 
